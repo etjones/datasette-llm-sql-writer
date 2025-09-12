@@ -17,6 +17,18 @@ async def test_js_injected_on_table_page(basic_test_db: Path) -> None:
 
 
 @pytest.mark.asyncio
+async def test_js_injected_on_query_page(basic_test_db: Path) -> None:
+    ds = Datasette([str(basic_test_db)])
+    # Query page (must include an SQL parameter)
+    r = await ds.client.get("/basic/-/query?sql=select+1")
+    assert r.status_code == 200
+    html = r.text
+    # Use Datasette helper to compute the expected static plugin URL
+    expected_url = ds.urls.static_plugins("datasette_llm_sql_writer", "app.js")
+    assert expected_url in html
+
+
+@pytest.mark.asyncio
 async def test_generate_endpoint_ok(monkeypatch: Any, basic_test_db: Path) -> None:
     # Datasette instance with the reusable basic test db
     ds = Datasette([str(basic_test_db)])
