@@ -9,8 +9,9 @@ classifiers=[
     "Framework :: Datasette"
 ]
 requires-python = ">=3.9"
+# I had to use `uv sync --prerelease allow` to use the latest version of datasette
 dependencies = [
-    "datasette",
+    "datasette>0.66",
     "llm",
 ]
 

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import Any, Optional
 
 import re
@@ -37,23 +35,21 @@ def is_select_only(sql: str) -> bool:
         st = t.strip()
         if not st:
             continue
-        # Remove leading comments
-        st = re.sub(r"^--.*$", "", st, flags=re.MULTILINE).strip()
+        # Remove comments (line and block)
+        st = re.sub(r"^--.*$", "", st, flags=re.MULTILINE)
         st = re.sub(r"/\*.*?\*/", "", st, flags=re.DOTALL).strip()
         if not st:
             continue
-        upper = st.upper()
-        if upper.startswith("WITH "):
-            # OK if it eventually selects
-            # Find the first non-parenthesized SELECT after WITH CTEs
-            if " SELECT " not in f" {upper} ":
-                return False
-        elif not upper.startswith("SELECT "):
-            return False
-        # Check disallowed keywords presence at start
+        # Reject if the statement starts with any disallowed keyword, allowing for newlines/whitespace
         for bad in disallowed:
-            if upper.startswith(bad + " ") or upper == bad:
+            if re.match(rf"^\s*{bad}\b", st, flags=re.IGNORECASE):
                 return False
+        # Allow SELECT or WITH ... SELECT, tolerant of newlines/parentheses
+        if re.match(r"^\s*WITH\b", st, flags=re.IGNORECASE):
+            if not re.search(r"\bSELECT\b", st, flags=re.IGNORECASE):
+                return False
+        elif not re.match(r"^\s*\(*\s*SELECT\b", st, flags=re.IGNORECASE):
+            return False
     return True
 
 
@@ -130,10 +126,41 @@ async def generate_sql(
 
     # Request deterministic output
     model = llm.get_model(model_id)
-    response = model.prompt(full_prompt, temperature=0)  # type: ignore[attr-defined]
+    response = model.prompt(full_prompt)  # type: ignore[attr-defined]
     text = response.text() if hasattr(response, "text") else str(response)
 
     # Strip common Markdown fences if present
     cleaned = re.sub(r"^```sql\s*|\s*```$", "", text.strip(), flags=re.IGNORECASE)
     cleaned = cleaned.strip()
     return cleaned
+
+
+# ETJ DEBUG
+def main():
+    sql = """SELECT
+  "Master File ID",
+  "License Type",
+  "License ID",
+  "Trade Name",
+  "Owner",
+  "Original Issue Date",
+  "Current Issued Date",
+  "Address",
+  "City",
+  "State",
+  "Zip",
+  "Primary Status",
+  "Secondary Status",
+  "License Status"
+FROM licenses
+WHERE substr(trim(coalesce("Zip", '')), 1, 5) = '78703'
+  AND coalesce("Original Issue Date", '') <> ''
+ORDER BY date("Original Issue Date") DESC, "Original Issue Date" DESC
+LIMIT 10"""
+    print(f"is_select_only: {is_select_only(sql)}")
+    print(sql)
+
+
+if __name__ == "__main__":
+    main()
+# END DEBUG
