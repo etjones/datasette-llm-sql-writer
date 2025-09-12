@@ -1,0 +1,7 @@
+{
+  "plugins": {
+    "datasette-llm-sql-writer": {
+      "model": "openai:gpt-5"
+    }
+  }
+}
