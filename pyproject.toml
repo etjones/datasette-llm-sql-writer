@@ -3,17 +3,12 @@ name = "datasette-llm-sql-writer"
 version = "0.1"
 description = "Generate Datasette SQL queries using plain language and an LLM"
 readme = "README.md"
-authors = [{name = "Evan Jones"}]
+authors = [{ name = "Evan Jones" }]
 license = "Apache-2.0"
-classifiers=[
-    "Framework :: Datasette"
-]
+classifiers = ["Framework :: Datasette"]
 requires-python = ">=3.9"
 # I had to use `uv sync --prerelease allow` to use the latest version of datasette
-dependencies = [
-    "datasette>0.66",
-    "llm",
-]
+dependencies = ["datasette>=1.0a19", "llm"]
 
 [build-system]
 requires = ["setuptools<81"]
@@ -40,4 +35,3 @@ asyncio_default_fixture_loop_scope = "function"
 where = ["."]
 include = ["datasette_llm_sql_writer*"]
 exclude = ["tests*", "dev_prompts*"]
-
