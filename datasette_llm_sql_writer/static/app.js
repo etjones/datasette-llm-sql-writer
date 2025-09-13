@@ -182,19 +182,14 @@ function renderPanel(node) {
     msgs.forEach((m) => {
       if (m.role === 'user') {
         const userDiv = document.createElement('div');
-        userDiv.style.background = '#eef6ff';
-        userDiv.style.border = '1px solid #cfe3ff';
+        userDiv.style.background = '#d6ecff';
+        userDiv.style.border = '1px solid #7db7ff';
         userDiv.style.borderRadius = '8px';
         userDiv.style.padding = '6px 8px';
         userDiv.style.margin = '6px 0';
-        const label = document.createElement('div');
-        label.textContent = 'You';
-        label.style.fontSize = '12px';
-        label.style.color = '#336699';
-        label.style.marginBottom = '2px';
         const content = document.createElement('div');
-        content.textContent = m.content;
-        userDiv.appendChild(label);
+        content.style.color = '#084e8a';
+        content.textContent = `• ${m.content}`;
         userDiv.appendChild(content);
         // Container for assistant responses to this prompt
         const responses = document.createElement('div');
@@ -210,42 +205,35 @@ function renderPanel(node) {
         const isError = typeof m.content === 'string' && m.content.startsWith('ERROR:');
         if (isError) {
           const div = document.createElement('div');
-          div.style.background = '#ffecec';
-          div.style.border = '1px solid #ffcccc';
+          div.style.background = '#ffd6d6';
+          div.style.border = '1px solid #ff9c9c';
           div.style.borderRadius = '8px';
           div.style.padding = '6px 8px';
           div.style.margin = '6px 0';
-          const label = document.createElement('div');
-          label.textContent = 'Assistant';
-          label.style.fontSize = '12px';
-          label.style.color = '#993333';
-          label.style.marginBottom = '2px';
           const content = document.createElement('div');
           content.textContent = m.content;
-          div.appendChild(label);
           div.appendChild(content);
           target.appendChild(div);
         } else {
           const div = document.createElement('div');
-          div.style.background = '#f6f6ff';
-          div.style.border = '1px solid #ddddff';
+          div.style.background = '#ece6ff';
+          div.style.border = '1px solid #b5a8ff';
           div.style.borderRadius = '8px';
           div.style.padding = '6px 8px';
           div.style.margin = '6px 0';
-          const label = document.createElement('div');
-          label.textContent = 'Assistant (SQL)';
-          label.style.fontSize = '12px';
-          label.style.color = '#333399';
-          label.style.marginBottom = '4px';
           const details = document.createElement('details');
           details.open = false;
           const summary = document.createElement('summary');
+          // Make summary a flex row so actions can sit on the same line
+          summary.style.display = 'flex';
+          summary.style.alignItems = 'center';
+          const summaryText = document.createElement('span');
           const lines = (m.content || '').split('\n').length;
           function setSummaryText() {
             if (details.open) {
-              summary.innerHTML = '<em>Hide SQL</em>';
+              summaryText.innerHTML = '<em>Hide SQL</em>';
             } else {
-              summary.innerHTML = `<em>Show SQL (${lines} lines)</em>`;
+              summaryText.innerHTML = `<em>Show SQL (${lines} lines)</em>`;
             }
           }
           setSummaryText();
@@ -256,7 +244,84 @@ function renderPanel(node) {
           pre.textContent = m.content || '';
           details.appendChild(summary);
           details.appendChild(pre);
-          div.appendChild(label);
+
+          // Action buttons inline with summary
+          const actions = document.createElement('div');
+          actions.style.marginLeft = 'auto';
+          actions.style.display = 'flex';
+          actions.style.alignItems = 'center';
+          actions.style.gap = '6px';
+          const copyBtn = document.createElement('button');
+          copyBtn.type = 'button';
+          copyBtn.title = 'Copy SQL to clipboard';
+          copyBtn.setAttribute('aria-label', 'Copy SQL to clipboard');
+          // Inline SVG icon for Copy (from static/copy_icon.svg)
+          copyBtn.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path d="
+                    M 6 6
+                    L 6 4
+                    A 1 1 0 0 1 7 3
+                    L 14 3
+                    A 1 1 0 0 1 15 4
+                    L 15 14
+                    A 1 1 0 0 1 14 15
+                    L 12 15
+                  "
+                    fill="none" 
+                    stroke="#4b5563" 
+                    stroke-width="1.5" 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round"/>
+              <rect x="3" y="6" width="9" height="12" rx="1" ry="1" 
+                    fill="none" 
+                    stroke="#4b5563" 
+                    stroke-width="1.5"/>
+            </svg>
+          `;
+          const runBtn2 = document.createElement('button');
+          runBtn2.type = 'button';
+          runBtn2.title = 'Run SQL';
+          runBtn2.setAttribute('aria-label', 'Run SQL');
+          // Inline SVG icon for Run (from static/play_icon.svg)
+          runBtn2.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <polygon points="6,4 6,16 15,10" fill="#4b5563"/>
+            </svg>
+          `;
+
+          // (Copy icon is inlined above)
+          actions.appendChild(copyBtn);
+          actions.appendChild(runBtn2);
+
+          copyBtn.addEventListener('click', async (ev) => {
+            ev.preventDefault(); ev.stopPropagation();
+            const sql = m.content || '';
+            try {
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(sql);
+              } else {
+                // Fallback
+                const ta = document.createElement('textarea');
+                ta.value = sql;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+              }
+            } catch (_) { /* ignore copy errors */ }
+          });
+
+          runBtn2.addEventListener('click', (ev) => {
+            ev.preventDefault(); ev.stopPropagation();
+            const sql = m.content || '';
+            runArbitrarySql(sql);
+          });
+
+          summary.appendChild(summaryText);
+          summary.appendChild(actions);
+          details.appendChild(summary);
+          details.appendChild(pre);
           div.appendChild(details);
           target.appendChild(div);
         }
@@ -363,6 +428,23 @@ function renderPanel(node) {
       // Save lastRanSql and lastPrompt before redirecting
       saveState(dbName, { lastRanSql: lastSql, lastPrompt: p });
       const url = `/${encodeURIComponent(dbName)}/-/query?sql=${encodeURIComponent(lastSql)}&_hide_sql=1`;
+      window.location.href = url;
+    }
+  }
+
+  // Run arbitrary SQL either by inserting into the visible editor and submitting
+  // the form, or by redirecting to the query page when the editor is hidden.
+  function runArbitrarySql(sql) {
+    if (!sql) return;
+    const editor = findSqlEditor();
+    if (editor) editor.value = sql;
+    const form = findSqlFormContaining(editor);
+    if (form) {
+      saveState(db, { lastRanSql: sql });
+      form.submit();
+    } else {
+      const url = `/${encodeURIComponent(db)}/-/query?sql=${encodeURIComponent(sql)}&_hide_sql=1`;
+      saveState(db, { lastRanSql: sql });
       window.location.href = url;
     }
   }
