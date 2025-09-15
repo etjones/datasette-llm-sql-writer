@@ -28,7 +28,7 @@ datasette path/to/your.db -p 8001
 
 2) Configure the LLM model (optional but recommended)
 
-By default, the plugin uses a model id from plugin configuration (see below). If not set, it defaults to `gpt-5` which likely does not exist in your `llm` setup. Configure an alternate model via Datasette metadata if you like. Default model id is `gpt-5`:
+By default, the plugin targets OpenAI and uses `gpt-4o-mini` unless you override it. You can configure a model via Datasette metadata or an environment variable (see below):
 
 `metadata.json`:
 
@@ -36,7 +36,7 @@ By default, the plugin uses a model id from plugin configuration (see below). If
 {
   "plugins": {
     "datasette-llm-sql-writer": {
-      "model": "gpt-5"
+      "model": "gpt-4o-mini"
     }
   }
 }
@@ -60,6 +60,71 @@ datasette path/to/your.db --metadata metadata.json -p 8001
 Notes:
 - The backend enforces that generated SQL is read‑only. See `datasette_llm_sql_writer/generator.py:is_select_only()`.
 - The panel tracks whether the current prompt/SQL has already been run—if you change the prompt or the SQL in the editor, "Generate & Run" will regenerate before running.
+
+## Authentication and API Keys
+
+This plugin relies on the [`llm`](https://llm.datasette.io/) package for model execution and authentication. To minimize friction and keep secrets management simple, you have two supported options:
+
+1) Use `llm`'s built-in key store (best for local development)
+
+```bash
+uv add llm llm-openai
+llm keys set openai
+```
+
+This stores your key securely for your user account. The plugin will just work if `llm` can access the model you specify.
+
+2) Provide an environment variable (best for containers/CI)
+
+- Default env var: `OPENAI_API_KEY`
+- You can change which env var to read via `metadata.json` under this plugin's config:
+
+```json
+{
+  "plugins": {
+    "datasette-llm-sql-writer": {
+      "env_api_key_var": "OPENAI_API_KEY"
+    }
+  }
+}
+```
+
+If you set `env_api_key_var` to a different name (e.g. `MY_OPENAI_KEY`), the plugin will read that variable and bridge it to `OPENAI_API_KEY` at runtime for OpenAI.
+
+Quick check:
+
+```bash
+export OPENAI_API_KEY="sk-..."
+datasette path/to/your.db -p 8001
+```
+
+If you see authentication errors, visit the diagnostics endpoint described below.
+
+## Model selection
+
+The model id is resolved with this precedence:
+
+1) `metadata.json` plugin config: `plugins.datasette-llm-sql-writer.model`
+2) Environment variable: `LLM_SQL_WRITER_MODEL`
+3) Default: `gpt-4o-mini` (OpenAI)
+
+Examples:
+
+```json
+{
+  "plugins": {
+    "datasette-llm-sql-writer": {
+      "model": "gpt-4o-mini"
+    }
+  }
+}
+```
+
+or
+
+```bash
+export LLM_SQL_WRITER_MODEL=gpt-4o-mini
+```
 
 ## Configuration
 
@@ -112,4 +177,37 @@ datasette path/to/your.db -p 8001
 - The LLM prompt includes the schema context (table/column names) and optional chat history.
 - Returned SQL is validated to be read‑only before being emitted to the UI.
 - On table pages the panel uses the Datasette 1.x JavaScript plugin panel API; on non‑table pages it is inserted under the main header.
+
+## Diagnostics
+
+Visit `/-/llm-sql-writer/diagnostics` to quickly check whether:
+
+- `llm` is installed
+- The resolved `model_id` is available
+- Your environment variable for the API key is present
+
+The endpoint returns JSON with helpful hints and links to docs.
+
+## FAQ
+
+- Can I put my API key in `metadata.json`?
+
+  Strongly discouraged. Keep secrets in `llm`'s key store or environment variables.
+
+- I get an error about unknown or unavailable model
+
+  Install the appropriate `llm` provider plugin and confirm the model/alias exists. For OpenAI:
+
+  ```bash
+  uv add llm-openai
+  llm keys set openai
+  ```
+
+- I set a key but it still fails
+
+  Ensure Datasette is running as the same user and virtual environment where you configured `llm`. If you use an env var, make sure it is set in the same process environment as the Datasette server.
+
+- Local usage notes and privacy
+
+  This plugin is commonly used locally. Be mindful that prompts and schema context are sent to the model provider. Use provider-side controls and review your data handling policies if you work with sensitive data.
 

@@ -7,7 +7,7 @@ authors = [{ name = "Evan Jones" }]
 license = "Apache-2.0"
 classifiers = ["Framework :: Datasette"]
 requires-python = ">=3.9"
-# I had to use `uv sync --prerelease allow` to use the latest version of datasette
+
 dependencies = ["datasette>=1.0a19", "llm"]
 
 [build-system]
@@ -24,7 +24,7 @@ CI = "https://github.com/etjones/datasette-llm-sql-writer/actions"
 llm_sql_writer = "datasette_llm_sql_writer"
 
 [project.optional-dependencies]
-test = ["pytest", "pytest-asyncio", "httpx"]
+test = ["pytest", "pytest-asyncio", "httpx", "ipython"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "strict"

@@ -102,9 +102,6 @@ async def generate_sql(
     all context as parameters. Tests can monkeypatch this function to return a
     known SQL string without touching the LLM SDK.
     """
-    if llm is None:
-        raise RuntimeError("llm package is not installed")
-
     system = (
         "You are a careful SQL assistant for Datasette. "
         "Return only SQL code in your final answer. Do not include explanations. "
@@ -125,42 +122,30 @@ async def generate_sql(
     full_prompt = "".join(parts)
 
     # Request deterministic output
-    model = llm.get_model(model_id)
-    response = model.prompt(full_prompt)  # type: ignore[attr-defined]
-    text = response.text() if hasattr(response, "text") else str(response)
+    try:
+        model = llm.get_model(model_id)
+    except Exception as e:  # noqa: BLE001
+        docs = (
+            f"Unknown or unavailable model '{model_id}'. Ensure the model/provider is installed in 'llm' "
+            "and available. For OpenAI, install the provider plugin and configure keys:\n"
+            "  uv add llm-openai\n  llm keys set openai\n"
+            "See docs: https://github.com/etjones/datasette-llm-sql-writer#authentication-and-api-keys"
+        )
+        raise RuntimeError(docs) from e
+
+    try:
+        response = model.prompt(full_prompt)  # type: ignore[attr-defined]
+        text = response.text() if hasattr(response, "text") else str(response)
+    except Exception as e:  # noqa: BLE001
+        # Provide a helpful hint for missing/invalid keys without leaking details
+        hint = (
+            "LLM request failed. This often indicates a missing or invalid API key. "
+            "Configure a key using 'llm keys set openai' or set the OPENAI_API_KEY environment variable.\n"
+            "See docs: https://github.com/etjones/datasette-llm-sql-writer#authentication-and-api-keys"
+        )
+        raise RuntimeError(hint) from e
 
     # Strip common Markdown fences if present
     cleaned = re.sub(r"^```sql\s*|\s*```$", "", text.strip(), flags=re.IGNORECASE)
     cleaned = cleaned.strip()
     return cleaned
-
-
-# ETJ DEBUG
-def main():
-    sql = """SELECT
-  "Master File ID",
-  "License Type",
-  "License ID",
-  "Trade Name",
-  "Owner",
-  "Original Issue Date",
-  "Current Issued Date",
-  "Address",
-  "City",
-  "State",
-  "Zip",
-  "Primary Status",
-  "Secondary Status",
-  "License Status"
-FROM licenses
-WHERE substr(trim(coalesce("Zip", '')), 1, 5) = '78703'
-  AND coalesce("Original Issue Date", '') <> ''
-ORDER BY date("Original Issue Date") DESC, "Original Issue Date" DESC
-LIMIT 10"""
-    print(f"is_select_only: {is_select_only(sql)}")
-    print(sql)
-
-
-if __name__ == "__main__":
-    main()
-# END DEBUG
