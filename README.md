@@ -74,7 +74,6 @@ This plugin relies on the [`llm`](https://llm.datasette.io/) package for model e
 1) Use `llm`'s built-in key store (best for local development)
 
 ```bash
-uv add llm llm-openai
 llm keys set openai
 ```
 
@@ -89,13 +88,13 @@ This stores your key securely for your user account. The plugin will just work i
 {
   "plugins": {
     "datasette-llm-sql-writer": {
-      "env_api_key_var": "OPENAI_API_KEY"
+      "model": "anthropic/claude-sonnet-4-0",
+      "env_api_key_var": "ANTHROPIC_API_KEY"
     }
   }
 }
 ```
-
-If you set `env_api_key_var` to a different name (e.g. `MY_OPENAI_KEY`), the plugin will read that variable and bridge it to `OPENAI_API_KEY` at runtime for OpenAI.
+- No configuration file is needed to use the default model, `gpt-5-mini`.
 
 Quick check:
 
@@ -104,7 +103,7 @@ export OPENAI_API_KEY="sk-..."
 datasette path/to/your.db -p 8001
 ```
 
-If you see authentication errors, visit the diagnostics endpoint described below.
+If you see authentication errors, visit the [diagnostics](#Diagnostics) section of this page.
 
 ## Model selection
 
@@ -161,7 +160,7 @@ git clone https://github.com/etjones/datasette-llm-sql-writer
 cd datasette-llm-sql-writer
 uv venv
 source .venv/bin/activate
-uv sync  # installs runtime and test dependencies from pyproject.toml
+uv sync --all-extras # installs runtime and test dependencies from pyproject.toml
 ```
 
 Run the tests:
@@ -186,7 +185,7 @@ datasette path/to/your.db -p 8001
 
 ## Diagnostics
 
-Visit `/-/llm-sql-writer/diagnostics` to quickly check whether:
+Visit `http://localhost:8001/-/llm-sql-writer/diagnostics` to quickly check whether:
 
 - `llm` is installed
 - The resolved `model_id` is available
@@ -198,16 +197,18 @@ The endpoint returns JSON with helpful hints and links to docs.
 
 - Can I put my API key in `metadata.json`?
 
-  Strongly discouraged. Keep secrets in `llm`'s key store or environment variables.
+  Nope. Keep secrets in `llm`'s key store or environment variables.
 
 - I get an error about unknown or unavailable model
 
-  Install the appropriate `llm` provider plugin and confirm the model/alias exists. For OpenAI:
+  Install the appropriate `llm` provider plugin and confirm the model/alias exists. For Claude:
 
   ```bash
-  uv add llm-openai
-  llm keys set openai
+  uv add llm-anthropic
+  llm keys set anthropic
   ```
+
+  See [llm docs](https://llm.datasette.io/en/stable/other-models.html) for more info on provider plugins.
 
 - I set a key but it still fails
 
