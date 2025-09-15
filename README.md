@@ -61,6 +61,12 @@ Notes:
 - The backend enforces that generated SQL is read‑only. See `datasette_llm_sql_writer/generator.py:is_select_only()`.
 - The panel tracks whether the current prompt/SQL has already been run—if you change the prompt or the SQL in the editor, "Generate & Run" will regenerate before running.
 
+
+## CAUTION CAUTION CAUTION - THIS GRANTS OTHERS USE OF YOUR LLM ACCOUNT
+This plugin uses your API key to generate SQL queries. If you're using this plugin locally, that's exactly what you want. If you're using this plugin to share a dataset with others, be aware that you're letting them run up LLM bills on your behalf. 
+
+(In practice, these prompts will be effectively free, but it's still a good idea to be aware of this. And somebody is likely to be able to find some extra use for free API calls if they work hard enough. )
+
 ## Authentication and API Keys
 
 This plugin relies on the [`llm`](https://llm.datasette.io/) package for model execution and authentication. To minimize friction and keep secrets management simple, you have two supported options:
