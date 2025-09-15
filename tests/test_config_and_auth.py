@@ -64,7 +64,9 @@ async def test_model_from_env_var(monkeypatch: Any, basic_test_db: Path) -> None
 
 
 @pytest.mark.asyncio
-async def test_default_model_is_openai_mini(monkeypatch: Any, basic_test_db: Path) -> None:
+async def test_default_model_is_openai_mini(
+    monkeypatch: Any, basic_test_db: Path
+) -> None:
     monkeypatch.delenv("LLM_SQL_WRITER_MODEL", raising=False)
     ds = Datasette([str(basic_test_db)])
 
@@ -74,7 +76,7 @@ async def test_default_model_is_openai_mini(monkeypatch: Any, basic_test_db: Pat
         history: list[dict[str, str]] | None,
         model_id: str,
     ) -> str:  # type: ignore[override]
-        assert model_id == "gpt-4o-mini"
+        assert model_id == "gpt-5-mini"
         return "select 1"
 
     import datasette_llm_sql_writer.generator as generator_mod
@@ -87,7 +89,9 @@ async def test_default_model_is_openai_mini(monkeypatch: Any, basic_test_db: Pat
 
 
 @pytest.mark.asyncio
-async def test_env_api_key_bridging_from_custom_var(monkeypatch: Any, basic_test_db: Path) -> None:
+async def test_env_api_key_bridging_from_custom_var(
+    monkeypatch: Any, basic_test_db: Path
+) -> None:
     # Ensure OPENAI_API_KEY is unset, set a custom env var and configure metadata to use it
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.setenv("MY_OPENAI_KEY", "abc123")
@@ -158,7 +162,7 @@ async def test_generate_sql_missing_api_key_hint(monkeypatch: Any) -> None:
             prompt="p",
             schema_text="s",
             history=[],
-            model_id="gpt-4o-mini",
+            model_id="gpt-5-mini",
         )
     msg = str(ex.value)
     assert "missing or invalid API key" in msg

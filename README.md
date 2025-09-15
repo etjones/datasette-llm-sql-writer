@@ -28,7 +28,7 @@ datasette path/to/your.db -p 8001
 
 2) Configure the LLM model (optional but recommended)
 
-By default, the plugin targets OpenAI and uses `gpt-4o-mini` unless you override it. You can configure a model via Datasette metadata or an environment variable (see below):
+By default, the plugin targets OpenAI and uses `gpt-5-mini` unless you override it. You can configure a model via Datasette metadata or an environment variable (see below):
 
 `metadata.json`:
 
@@ -36,7 +36,7 @@ By default, the plugin targets OpenAI and uses `gpt-4o-mini` unless you override
 {
   "plugins": {
     "datasette-llm-sql-writer": {
-      "model": "gpt-4o-mini"
+      "model": "gpt-5-mini"
     }
   }
 }
@@ -112,7 +112,7 @@ The model id is resolved with this precedence:
 
 1) `metadata.json` plugin config: `plugins.datasette-llm-sql-writer.model`
 2) Environment variable: `LLM_SQL_WRITER_MODEL`
-3) Default: `gpt-4o-mini` (OpenAI)
+3) Default: `gpt-5-mini` (OpenAI)
 
 Examples:
 
@@ -120,7 +120,7 @@ Examples:
 {
   "plugins": {
     "datasette-llm-sql-writer": {
-      "model": "gpt-4o-mini"
+      "model": "gpt-5-mini"
     }
   }
 }
@@ -129,7 +129,7 @@ Examples:
 or
 
 ```bash
-export LLM_SQL_WRITER_MODEL=gpt-4o-mini
+export LLM_SQL_WRITER_MODEL=gpt-5-mini
 ```
 
 ## Configuration

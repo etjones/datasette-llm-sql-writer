@@ -53,7 +53,7 @@ def _resolve_model_id(datasette: Any) -> str:
     Precedence:
     1) metadata.json: plugins.datasette-llm-sql-writer.model
     2) env: LLM_SQL_WRITER_MODEL
-    3) default: "gpt-4o-mini" (OpenAI)
+    3) default: "gpt-5-mini" (OpenAI)
     """
     cfg = _get_plugin_config(datasette)
     model_from_cfg = cfg.get("model")
@@ -62,7 +62,7 @@ def _resolve_model_id(datasette: Any) -> str:
     env_model = os.getenv("LLM_SQL_WRITER_MODEL", "").strip()
     if env_model:
         return env_model
-    return "gpt-4o-mini"
+    return "gpt-5-mini"
 
 
 def _env_api_key_var(datasette: Any) -> str:
@@ -99,7 +99,7 @@ async def _handle_generate(request: Any, datasette: Any) -> Response:
 
     # Resolve model id with precedence: metadata.json > env > default
     # Users can set in metadata.json under plugin name "datasette-llm-sql-writer":
-    # {"plugins": {"datasette-llm-sql-writer": {"model": "gpt-4o-mini"}}}
+    # {"plugins": {"datasette-llm-sql-writer": {"model": "gpt-5-mini"}}}
     model_id: str = _resolve_model_id(datasette)
 
     # Bridge custom env var to OPENAI_API_KEY for OpenAI provider if needed
@@ -165,6 +165,7 @@ def register_routes() -> list[tuple[str, Any]]:
         if info["llm_installed"]:
             try:
                 import llm as _llm  # type: ignore
+
                 _ = _llm.get_model(model_id)
                 model_available = True
             except Exception as e:  # noqa: BLE001

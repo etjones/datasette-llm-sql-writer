@@ -37,7 +37,7 @@ Read a cookiecutter template for writing Datasette plugins for more information 
   - A: Just on table pages is preferred.
 
 - Critical: Default LLM model via `llm`?
-  - Example: `llm.get_model("openai:gpt-4o-mini")`, `openai:gpt-3.5-turbo`, or another? Should we read from a plugin config key (e.g., in `metadata.json`) or environment variable (e.g., `LLM_MODEL`)?
+  - Example: `llm.get_model("openai:gpt-5-mini")`, `openai:gpt-3.5-turbo`, or another? Should we read from a plugin config key (e.g., in `metadata.json`) or environment variable (e.g., `LLM_MODEL`)?
   - A: Let's read a plugin config key from metadata.json, but default to `gpt-5` if not specified.
 
 - High: Persistence of chat UI across page reloads?

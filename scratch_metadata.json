@@ -1,7 +1,0 @@
-{
-  "plugins": {
-    "datasette-llm-sql-writer": {
-      "model": "gpt-5"
-    }
-  }
-}
