@@ -1,12 +1,12 @@
 [project]
 name = "datasette-llm-sql-writer"
-version = "0.1"
+version = "0.2.1"
 description = "Generate Datasette SQL queries using plain language and an LLM"
 readme = "README.md"
 authors = [{ name = "Evan Jones" }]
 license = "Apache-2.0"
 classifiers = ["Framework :: Datasette"]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 
 dependencies = ["datasette>=1.0a19", "llm"]
 
@@ -35,3 +35,6 @@ asyncio_default_fixture_loop_scope = "function"
 where = ["."]
 include = ["datasette_llm_sql_writer*"]
 exclude = ["tests*", "dev_prompts*"]
+
+[tool.setuptools.package-data]
+"datasette_llm_sql_writer" = ["static/**"]
